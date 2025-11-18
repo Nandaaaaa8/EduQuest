@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduQuest — Game Edukasi</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0; font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; height: 100vh;
+  }
+  .app {
+    width: 360px; padding: 20px; border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    box-shadow: 4px 6px 18px rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+  }
+  h1 { margin: 0; font-size: 22px; text-align:center; }
+  p { margin: 5px 0 15px; color: rgba(255,255,255,0.8); text-align:center; }
+  button {
+    width: 100%; padding: 10px; border: none; border-radius: 10px;
+    margin-top: 10px; background: rgba(255,255,255,0.1);
+    color: #fff; font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: rgba(255,255,255,0.2); }
+  .card { margin-top: 15px; background: rgba(255,255,255,0.08);
+    border-radius: 15px; padding: 15px;
+  }
+  .opt { margin: 5px 0; padding: 10px; border-radius: 8px;
+    background: rgba(255,255,255,0.05); cursor: pointer;
+  }
+  .opt.correct { background: #4de39a; color: #0b2b1b; }
+  .opt.wrong { background: #ff6b6b; color: #2a0b0b; }
+</style>
+</head>
+
+<body>
+<div class="app">
+  <h1>EduQuest</h1>
+  <p>Quizz Pengetahuan Umum🎓</p>
+
+  <!-- Menu -->
+  <div id="menu">
+    <button onclick="startGame('mudah')">🌱 Level Mudah</button>
+    <button onclick="startGame('sedang')">⚙️ Level Sedang</button>
+    <button onclick="startGame('sulit')">🔥 Level Sulit</button>
+  </div>
+
+  <!-- Kuis -->
+  <div id="quiz" class="card" style="display:none;">
+    <h3 id="qText">Soal</h3>
+    <div id="options"></div>
+    <p id="progress"></p>
+    <button id="nextBtn" onclick="nextQuestion()" style="display:none;">➡️ Lanjut</button>
+    <button onclick="backToMenu()">🔙 Kembali</button>
+  </div>
+
+  <!-- Hasil -->
+  <div id="final" class="card" style="display:none;text-align:center;">
+  <h2>🏆 Selesai!</h2>
+  <p id="finalText"></p>
+  <p id="highScoreText" style="font-size: 14px; margin-top: 10px; color: #4de39a; font-weight: 600;"></p>
+  <button onclick="backToMenu()">🏠 Menu</button>
+</div>
+</div>
+
+<script>
+const bankSoal = {
+  mudah: [
+    {q:"2 + 3 = ?", correct:"5", opts:["4","5","6","7"]},
+    {q:"Ibu kota Indonesia?", correct:"Jakarta", opts:["Bandung","Jakarta","Surabaya","Medan"]},
+    {q:"Hewan yang bisa terbang?", correct:"Burung", opts:["Kucing","Ikan","Burung","Ular"]},
+    {q:"Bentuk bumi adalah?", correct:"Bulat", opts:["Kotak","Segitiga","Bulat","Oval"]},
+    {q:"Planet terdekat dari Matahari?", correct:"Merkurius", opts:["Venus","Merkurius","Mars","Bumi"]},
+    {q:"Air membeku pada suhu?", correct:"0°C", opts:["0°C","50°C","100°C","25°C"]},
+    {q:"Hasil 10 - 4 =", correct:"6", opts:["4","5","6","7"]},
+    {q:"Bahasa nasional Indonesia adalah?", correct:"Bahasa Indonesia", opts:["Bahasa Jawa","Bahasa Indonesia","Bahasa Sunda","Bahasa Inggris"]},
+    {q:"Lambang negara Indonesia adalah?", correct:"Garuda", opts:["Macan","Garuda","Elang","Rajawali"]},
+    {q:"Hari Kemerdekaan Indonesia?", correct:"17 Agustus", opts:["10 November","17 Agustus","1 Juni","20 Mei"]}
+  ],
+
+  sedang: [
+    {q:"12 × 8 =", correct:"96", opts:["92","96","88","84"]},
+    {q:"Gunung tertinggi di dunia?", correct:"Everest", opts:["Merapi","Everest","Fuji","Kilimanjaro"]},
+    {q:"Siapa penemu bola lampu?", correct:"Thomas Edison", opts:["Newton","Thomas Edison","Einstein","Tesla"]},
+    {q:"Fungsi paru-paru?", correct:"Bernapas", opts:["Bernapas","Mencerna","Memompa darah","Melihat"]},
+    {q:"Benua terbesar di dunia?", correct:"Asia", opts:["Eropa","Asia","Afrika","Amerika"]},
+    {q:"Ibu kota Jepang?", correct:"Tokyo", opts:["Kyoto","Osaka","Tokyo","Seoul"]},
+    {q:"81 ÷ 9 =", correct:"9", opts:["7","8","9","10"]},
+    {q:"Nama planet ketiga dari matahari?", correct:"Bumi", opts:["Venus","Mars","Bumi","Merkurius"]},
+    {q:"Proklamasi dibacakan di kota?", correct:"Jakarta", opts:["Surabaya","Bandung","Jakarta","Medan"]},
+    {q:"Hewan pemakan daging disebut?", correct:"Karnivora", opts:["Omnivora","Herbivora","Karnivora","Predator"]}
+  ],
+
+  sulit: [
+    {q:"Siapa penulis naskah Sumpah Pemuda?", correct:"Muhammad Yamin", opts:["Soekarno","Hatta","Muhammad Yamin","Ki Hajar Dewantara"]},
+    {q:"Akar dari 169 adalah?", correct:"13", opts:["11","12","13","14"]},
+    {q:"Bahasa pemrograman buatan Guido van Rossum?", correct:"Python", opts:["Java","C++","Python","HTML"]},
+    {q:"Planet terbesar di tata surya?", correct:"Jupiter", opts:["Saturnus","Mars","Bumi","Jupiter"]},
+    {q:"Teori relativitas ditemukan oleh?", correct:"Einstein", opts:["Newton","Tesla","Einstein","Darwin"]},
+    {q:"Negara dengan penduduk terbanyak?", correct:"India", opts:["India","Amerika","Cina","Rusia"]},
+    {q:"Fungsi jantung?", correct:"Memompa darah", opts:["Mencerna","Memompa darah","Bernapas","Menyaring darah"]},
+    {q:"Simbol kimia air?", correct:"H₂O", opts:["CO₂","H₂O","O₂","NaCl"]},
+    {q:"Lapisan atmosfer tempat pesawat terbang?", correct:"Troposfer", opts:["Stratosfer","Troposfer","Mesosfer","Termosfer"]},
+    {q:"Negara pertama yang mendarat di bulan?", correct:"Amerika Serikat", opts:["Rusia","Amerika Serikat","Cina","India"]}
+  ]
+};
+
+// variabel permainan
+let level="", idx=0, skor=0, soalAktif=[];
+let soalSudahKeluar = {mudah:[], sedang:[], sulit:[]};
+
+function $(id){return document.getElementById(id);}
+
+function startGame(lv){
+  level=lv; idx=0; skor=0;
+  // filter agar tidak mengulang soal
+  let sisaSoal = bankSoal[lv].filter(s=>!soalSudahKeluar[lv].includes(s.q));
+  if(sisaSoal.length < 10) { // reset jika soal habis
+    soalSudahKeluar[lv] = [];
+    sisaSoal = [...bankSoal[lv]];
+  }
+  soalAktif = sisaSoal.sort(()=>Math.random()-0.5).slice(0,10);
+  soalAktif.forEach(s=>soalSudahKeluar[lv].push(s.q));
+  show('quiz'); tampilSoal();
+}
+
+function tampilSoal(){
+  const q=soalAktif[idx];
+  $("qText").textContent=q.q;
+  $("options").innerHTML="";
+  q.opts.forEach(o=>{
+    let b=document.createElement("div");
+    b.className="opt"; b.textContent=o;
+    b.onclick=()=>pilihJawaban(b,q.correct);
+    $("options").appendChild(b);
+  });
+  $("progress").textContent=`Soal ${idx+1} / ${soalAktif.length}`;
+  $("nextBtn").style.display="none";
+}
+
+function pilihJawaban(btn, benar){
+  const opsi=document.querySelectorAll(".opt");
+  opsi.forEach(o=>o.onclick=null);
+  if(btn.textContent===benar){btn.classList.add("correct"); skor+=10;}
+  else{
+    btn.classList.add("wrong");
+    opsi.forEach(o=>{if(o.textContent===benar)o.classList.add("correct");});
+  }
+  if(idx<soalAktif.length-1)$("nextBtn").style.display="block";
+  else setTimeout(()=>tampilkanHasil(),600);
+}
+
+function nextQuestion(){idx++; tampilSoal();}
+function backToMenu(){show('menu');}
+function tampilkanHasil(){
+  show('final');
+  $("finalText").textContent=`Skor kamu ${skor} dari ${soalAktif.length*10}`;
+}
+function show(bagian){
+  ["menu","quiz","final"].forEach(id=>$(`${id}`).style.display=(id===bagian)?'':'none');
+}
+</script>
+</body>
+</html>
